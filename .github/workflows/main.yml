@@ -1,0 +1,47 @@
+name: SonarQube Cloud analysis
+
+on:
+  push:
+    branches: [ "master" ]
+
+  pull_request:
+    branches: [ "master" ]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+
+  Analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze .NET with SonarQube Cloud
+        uses: highbyte/sonarscan-dotnet@v2.5.1
+        with:
+          sonarProjectKey: TecJamayaOrg_WebAPPTest
+          sonarProjectName: WebAPPTest
+          sonarOrganization: tecjamayaorg
+
+          dotnetTestArguments: >-
+            --logger trx
+            --collect:"XPlat Code Coverage"
+            --
+            DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+          sonarBeginArguments: >-
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
+            /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
+
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
